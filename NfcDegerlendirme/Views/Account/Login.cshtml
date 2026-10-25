@@ -1,0 +1,10 @@
+@{ ViewData["Title"] = "Oturum açın"; }
+<div class="stage">
+<form method="post" asp-action="Login" asp-controller="Account" class="panelcard">
+  <div class="head"><h1>Oturum açın</h1><p class="sub">Yönetim paneli</p></div>
+  <div class="field"><input id="em" name="email" type="email" placeholder=" " required autocomplete="username"><label for="em">E-posta</label></div>
+  <div class="field"><input id="pw" name="password" type="password" placeholder=" " required autocomplete="current-password"><label for="pw">Şifre</label></div>
+  @if (ViewBag.Error != null) { <p role="alert" class="err">@ViewBag.Error</p> }
+  <button class="btn">Giriş</button>
+</form>
+</div>

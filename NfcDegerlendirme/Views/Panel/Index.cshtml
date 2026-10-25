@@ -1,0 +1,71 @@
+@model PanelVm
+@{ ViewData["Title"] = Model.BusinessName; var bq = Model.IsSuper ? Model.BusinessId.ToString() : null; }
+<div class="dash">
+  <div class="topbar"><b>@Model.BusinessName</b>
+    <div class="actions">@if (Model.IsSuper) { <a class="btn alt sm" href="/admin">← Firmalar</a> }
+      <form method="post" asp-antiforgery="true" action="/cikis"><button class="btn alt sm">Çıkış</button></form></div></div>
+  @if (TempData["Ok"] != null) { <p role="status" class="ok">@TempData["Ok"]</p> }
+  @if (TempData["Err"] != null) { <p role="alert" class="err">@TempData["Err"]</p> }
+
+  <h2>Profil</h2>
+  <div class="box logo-box">
+    <div class="avatar lg" id="logoAvatar">@if (!string.IsNullOrEmpty(Model.LogoUrl)) { <img src="@Model.LogoUrl" alt="Profil fotoğrafı"> } else { <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zm0 2c-3 0-8 1.5-8 4v2h16v-2c0-2.5-5-4-8-4z"/></svg> }</div>
+    <div style="flex:1;min-width:0">
+      <b>Profil fotoğrafı</b>
+      <p class="meta" style="margin:2px 0 12px">Müşteri sayfasında işletme adının üstünde görünür. PNG, JPG veya WebP, en fazla 2 MB.</p>
+      <div class="actions">
+        <form method="post" asp-antiforgery="true" action="/panel/logo" enctype="multipart/form-data" id="logoForm">
+          <input type="hidden" name="b" value="@bq">
+          <input type="file" name="logo" id="logoInput" accept="image/png,image/jpeg,image/webp" hidden>
+          <label for="logoInput" class="btn sm" id="logoBtn" tabindex="0" role="button">@(string.IsNullOrEmpty(Model.LogoUrl) ? "Fotoğraf seç" : "Fotoğrafı değiştir")</label>
+        </form>
+        @if (!string.IsNullOrEmpty(Model.LogoUrl)) {
+          <form method="post" asp-antiforgery="true" action="/panel/logo/sil" data-confirm="Profil fotoğrafı kaldırılsın mı?">
+            <input type="hidden" name="b" value="@bq">
+            <button class="btn alt sm danger">Kaldır</button>
+          </form>
+        }
+      </div>
+      <p role="alert" class="err" id="logoErr"></p>
+    </div>
+  </div>
+
+  <h2>Genel bakış</h2>
+  <div class="tiles">
+    <div class="tile"><b>@Model.Visits</b><span>NFC ziyareti</span></div>
+    <div class="tile"><b>@Model.Total</b><span>Geri bildirim</span></div>
+    <div class="tile"><b>@Model.Average.ToString("0.0")</b><span>Ortalama puan</span></div>
+    <div class="tile"><b>@(Model.Visits > 0 ? (int)Math.Round(Model.Total * 100.0 / Model.Visits) : 0)%</b><span>Dönüşüm</span></div>
+  </div>
+  <div class="box" style="margin-top:12px">
+    @{ var max = Math.Max(1, Model.Dist.Values.DefaultIfEmpty(0).Max()); }
+    @for (var n = 5; n >= 1; n--) { var c = Model.Dist.GetValueOrDefault(n);
+      <div class="bar"><span style="width:28px">@n ★</span><i style="width:@((c * 60 / max).ToString())%;min-width:@(c > 0 ? 6 : 0)px"></i><span class="meta">@c</span></div> }
+  </div>
+
+  <h2>Geri bildirimler</h2>
+  <form method="get" class="filters">
+    @if (Model.IsSuper) { <input type="hidden" name="b" value="@Model.BusinessId"> }
+    <div class="field"><input id="q" name="q" placeholder=" " value="@Model.Q"><label for="q">Yorumlarda ara</label></div>
+    <div class="field"><input id="r" name="r" type="number" min="1" max="5" placeholder=" " value="@Model.R"><label for="r">Yıldız (1-5)</label></div>
+    <button class="btn">Filtrele</button>
+  </form>
+  <a class="btn alt sm csv" download href="/panel/export@(bq != null ? "?b=" + bq : "")"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0l-4.5-4.5M12 15l4.5-4.5M5 20h14"/></svg>CSV olarak indir</a>
+  <div class="box">
+    @if (Model.Items.Count == 0) { <p>Henüz geri bildirim yok.</p> }
+    @foreach (var f in Model.Items) {
+      <div class="row"><span class="s">@(new string('★', f.Rating))</span><div style="flex:1">
+        <div>@if (!string.IsNullOrEmpty(f.Comment)) { <span>@f.Comment</span> } else { <span class="meta">Yorum yazılmadı</span> }</div>
+        <div class="meta">@(f.Name != null ? f.Name + " · " : "")@f.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm") @if (f.CardName != null) { <span class="chip">@f.CardName</span> }</div></div></div>
+    }
+  </div>
+
+  <h2>Ayarlar</h2>
+  <form method="post" asp-antiforgery="true" action="/panel/settings"><div class="box">
+    <input type="hidden" name="b" value="@bq">
+    @if (string.IsNullOrEmpty(Model.GoogleReviewUrl)) { <p role="alert" class="err">Google yorum bağlantısı tanımlı değil; 4-5 yıldız verenler Google'a yönlendirilemez.</p> }
+    <div class="field"><input id="g" name="googleReviewUrl" value="@Model.GoogleReviewUrl" placeholder=" "><label for="g">Google yorum bağlantısı (https://g.page/r/…/review)</label></div>
+    <p><label><input type="checkbox" name="commentRequired" value="true" @(Model.CommentRequired ? "checked" : "")> Yorum zorunlu</label></p>
+    <p><label>Tema rengi <input type="color" name="primaryColor" value="@Model.PrimaryColor"></label></p>
+    <button class="btn">Kaydet</button></div></form>
+</div>
