@@ -2,8 +2,6 @@
 
 ASP.NET Core 8 MVC, Entity Framework Core ve SQL Server ile yazılmış çok firmalı NFC değerlendirme platformu. Müşteri NFC karta telefonunu okutur, yıldız verir, yorum yazar. 4–5 yıldız verenler işletmenin Google yorum sayfasına yönlendirilir (yorumu müşteri kendisi yazar, uygulama Google'a yorum göndermez); 1–3 yıldız yalnızca işletme panelinde görünür.
 
-> **Durum:** Bu kod bir geliştirme ortamında yazıldı ancak **henüz derlenip çalıştırılmadı** (o ortamda .NET SDK yoktu). İlk `dotnet build` sırasında küçük hatalar çıkabilir; çıktıyı paylaşırsanız düzeltilir.
-
 ## Özellik durumu
 | Özellik | Durum |
 |---|---|
